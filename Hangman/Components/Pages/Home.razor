@@ -48,12 +48,19 @@
         <p class="masked-word">@maskedWord</p>
 
         <div class="guess-section">
-            <label>
-                Hádej písmeno:
+            <div class="guess-row">
+                <label>Hádej písmeno:</label>
                 <input type="text" maxlength="1" @bind="currentGuess" @onkeyup="HandleKeyPress" class="guess-input"
                        disabled="@game.IsGameOver()" />
-            </label>
-            <button @onclick="SubmitGuess" class="guess-btn" disabled="@game.IsGameOver()">Hádám</button>
+                <button @onclick="SubmitGuess" class="guess-btn" disabled="@game.IsGameOver()">Hádám</button>
+            </div>
+
+            <div class="guess-row">
+                <label>Hádej celé slovo:</label>
+                <input type="text" @bind="currentWordGuess" @onkeyup="HandleWordKeyPress" class="guess-input"
+                       disabled="@game.IsGameOver()" />
+                <button @onclick="SubmitWordGuess" class="guess-btn" disabled="@game.IsGameOver()">Hádej slovo</button>
+            </div>
         </div>
 
         @if (!string.IsNullOrEmpty(message))
@@ -69,7 +76,7 @@
             </div>
         }
 
-        <p>Počet chyb: @game.NumberOfMistakes / @game.MaxMistakes</p>
+        <p>Počet chyb: @game.NumberOfMistakes / @game.MaxMistakes</p>        
 
         @if (game.IsGameOver())
         {
@@ -80,8 +87,8 @@
                 <p>Správné slovo bylo: <strong>@game.SecretWord</strong></p>
             }
             <button @onclick="ResetGame" class="start-btn">Nová hra</button>
-        }
-    </div>
+        }        
+    </div>    
 }
 
 @code {
@@ -92,6 +99,7 @@
     private string? maskedWord;
     private string? message;
     private string currentGuess = "";
+    private string currentWordGuess = "";
 
     protected override void OnInitialized()
     {
@@ -129,6 +137,14 @@
         }
     }
 
+    private void HandleWordKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SubmitWordGuess();
+        }
+    }
+
     private void ResetGame()
     {
         nickname = "";
@@ -137,5 +153,26 @@
         maskedWord = null;
         message = null;
         currentGuess = "";
+    }
+
+    private void SubmitWordGuess()
+    {
+        if (string.IsNullOrWhiteSpace(currentWordGuess) || game == null) return;
+
+        var guess = currentWordGuess.Trim().ToUpperInvariant();
+        if (guess == game.SecretWord.ToUpperInvariant())
+        {
+            message = "🎉 Uhodl/a jsi celé slovo!";
+            maskedWord = game.SecretWord;
+            game.ForceWin(); 
+        }
+        else
+        {
+            message = $"❌ Slovo '{currentWordGuess}' není správně! Prohráváš.";
+            game.ForceLose();
+        }
+
+        maskedWord = game.GetCurrentProgress();
+        currentWordGuess = "";
     }
 }

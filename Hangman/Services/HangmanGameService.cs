@@ -53,6 +53,18 @@
         public bool IsWordGuessed()
         {
             return SecretWord.All(c => GuessedLetters.Contains(c));
-        }        
+        }
+
+        public void ForceWin()
+        {
+            NumberOfMistakes = 0;
+            foreach (var c in SecretWord.Distinct())
+                GuessedLetters.Add(c);
+        }
+
+        public void ForceLose()
+        {
+            NumberOfMistakes = MaxMistakes;
+        }
     }
 }
