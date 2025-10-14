@@ -11,7 +11,7 @@
         public HangmanGameService(string secretWord, int maxMistakes = 6)
         {
             if (string.IsNullOrWhiteSpace(secretWord))
-                throw new ArgumentException("Hádané slovo nemůže být prázdné");
+                throw new ArgumentException("Secret word cannot be null or empty.", nameof(secretWord));
 
             SecretWord = secretWord.ToUpper();
             MaxMistakes = maxMistakes;
