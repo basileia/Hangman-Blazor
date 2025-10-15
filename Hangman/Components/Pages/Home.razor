@@ -5,6 +5,7 @@
 @using global::Hangman.Interfaces
 
 @inject IWordService WordService
+@inject IGameFactory GameFactory
 
 <PageTitle>Hangman</PageTitle>
 
@@ -95,7 +96,7 @@
     private string nickname = "";
     private List<string>? categories;
     private string? selectedCategory = null;
-    private HangmanGameService? game;
+    private IHangmanGameService game;
     private string? maskedWord;
     private string? message;
     private string currentGuess = "";
@@ -111,7 +112,7 @@
         var randomWord = WordService.GetRandomWord(selectedCategory);
         if (!string.IsNullOrEmpty(randomWord))
         {
-            game = new HangmanGameService(randomWord);
+            game = GameFactory.CreateGame(randomWord);
             maskedWord = game.GetCurrentProgress();
             message = "";
             currentGuess = "";
