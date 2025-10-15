@@ -1,6 +1,8 @@
-﻿namespace Hangman.Services
+﻿using Hangman.Interfaces;
+
+namespace Hangman.Services
 {
-    public class HangmanGameService
+    public class HangmanGameService : IHangmanGameService
 
     {
         public string SecretWord { get; private set; }

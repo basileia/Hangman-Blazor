@@ -15,6 +15,7 @@ builder.Services.AddSingleton<IWordService>(sp =>
 
     return new WordService(filePath, logger);
 });
+builder.Services.AddSingleton<IGameFactory, GameFactory>();
 
 var app = builder.Build();
 
