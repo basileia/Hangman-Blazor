@@ -1,13 +1,11 @@
 ﻿using Hangman.Interfaces;
 using Hangman.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Hangman.Services
 {
     public class WordService : IWordService
     {
         private readonly List<WordEntry> _words = new();
-        private readonly Random _random = new();
         private readonly ILogger<WordService> _logger;
 
         public WordService(string filePath, ILogger<WordService> logger)
@@ -75,7 +73,7 @@ namespace Hangman.Services
                 return null;
             }
 
-            var index = _random.Next(query.Count);
+            var index = Random.Shared.Next(query.Count);
             return query[index].Word;
         }
     }
