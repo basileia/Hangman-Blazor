@@ -4,5 +4,6 @@
     {
         List<string> GetCategories();
         string? GetRandomWord(string? category = null);
+        string? LoadErrorMessage { get; }
     }
 }

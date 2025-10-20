@@ -7,6 +7,7 @@ namespace Hangman.Services
     {
         private readonly List<WordEntry> _words = new();
         private readonly ILogger<WordService> _logger;
+        public string? LoadErrorMessage { get; private set; }
 
         public WordService(string filePath, ILogger<WordService> logger)
         {
@@ -20,6 +21,7 @@ namespace Hangman.Services
             {
                 if (!File.Exists(filePath))
                 {
+                    LoadErrorMessage = $"Soubor '{filePath}' nebyl nalezen.";
                     _logger.LogWarning("CSV file '{FilePath}' was not found.", filePath);
                     return;
                 }
@@ -28,6 +30,7 @@ namespace Hangman.Services
 
                 if (lines.Length <= 1)
                 {
+                    LoadErrorMessage = "Soubor neobsahuje žádná data.";
                     _logger.LogWarning("CSV file '{FilePath}' does not contain any words.", filePath);
                     return;
                 }
@@ -52,6 +55,7 @@ namespace Hangman.Services
             }
             catch (Exception ex)
             {
+                LoadErrorMessage = $"Chyba při načítání souboru: {ex.Message}";
                 _logger.LogError(ex, "Error occurred while loading the CSV file.");
             }
         }
@@ -69,6 +73,7 @@ namespace Hangman.Services
 
             if (!query.Any())
             {
+                LoadErrorMessage = "V kategorii nebylo nalezeno žádné slovo.";
                 _logger.LogWarning("No words were found for category '{Category}'.", category);
                 return null;
             }
