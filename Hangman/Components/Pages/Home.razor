@@ -6,6 +6,7 @@
 
 @inject IWordService WordService
 @inject IGameFactory GameFactory
+@inject IWebHostEnvironment Env
 
 <PageTitle>Hangman</PageTitle>
 
@@ -104,7 +105,17 @@
 
     protected override void OnInitialized()
     {
-        categories = WordService.GetCategories();
+        var filePath = Path.Combine(Env.WebRootPath, "Data", "words.csv");
+        var result = WordService.LoadWords(filePath);
+        if (!result.IsSuccess)
+        {
+            Console.WriteLine($"Nepodařilo se načíst slova: {result.Error}");
+            categories = new List<string>();
+        }
+        else
+        {
+            categories = WordService.GetCategories();
+        }      
     }
 
     private void StartGame()

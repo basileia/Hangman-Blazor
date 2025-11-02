@@ -44,7 +44,9 @@ namespace Hangman.Services
 
         public string GetCurrentProgress()
         {
-            return string.Concat(SecretWord.Select(c => GuessedLetters.Contains(c) ? c : '_'));
+            return string.Concat(SecretWord.Select(c =>
+        char.IsLetter(c) ? (GuessedLetters.Contains(c) ? c : '_') : c
+    ));
         }
 
         public bool IsGameOver()

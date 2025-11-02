@@ -1,9 +1,11 @@
-﻿namespace Hangman.Interfaces
+﻿using Hangman.Common;
+
+namespace Hangman.Interfaces
 {
     public interface IWordService
     {
         List<string> GetCategories();
         string? GetRandomWord(string? category = null);
-        string? LoadErrorMessage { get; }
+        public Result<int, string> LoadWords(string filePath);
     }
 }

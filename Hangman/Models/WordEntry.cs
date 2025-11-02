@@ -1,8 +1,5 @@
 ﻿namespace Hangman.Models
 {
-    public class WordEntry
-    {
-        public string Category { get; set; } = "";
-        public string Word { get; set; } = "";
-    }
+    public record WordEntry(string Category, string Word)
+    { }
 }

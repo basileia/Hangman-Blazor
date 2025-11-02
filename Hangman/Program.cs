@@ -6,16 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddSingleton<IWordService>(sp =>
-{
-    var env = sp.GetRequiredService<IWebHostEnvironment>();
-    var logger = sp.GetRequiredService<ILogger<WordService>>();
 
-    var filePath = Path.Combine(env.WebRootPath, "Data", "words.csv");
-
-    return new WordService(filePath, logger);
-});
 builder.Services.AddSingleton<IGameFactory, GameFactory>();
+builder.Services.AddSingleton<ICsvLoader, CsvLoader>();
+builder.Services.AddSingleton<IWordService, WordService>();
 
 var app = builder.Build();
 

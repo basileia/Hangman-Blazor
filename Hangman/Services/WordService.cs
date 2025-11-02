@@ -1,68 +1,48 @@
-﻿using Hangman.Interfaces;
+﻿using Hangman.Common;
+using Hangman.Interfaces;
 using Hangman.Models;
 
 namespace Hangman.Services
 {
     public class WordService : IWordService
     {
-        private readonly List<WordEntry> _words = new();
         private readonly ILogger<WordService> _logger;
-        public string? LoadErrorMessage { get; private set; }
+        private readonly ICsvLoader _csvLoader;
+        private IReadOnlyList<WordEntry> _words = Array.Empty<WordEntry>();
+        private readonly object _lock = new();
 
-        public WordService(string filePath, ILogger<WordService> logger)
+        public WordService(
+            ILogger<WordService> logger,
+            ICsvLoader csvLoader)
         {
             _logger = logger;
-            LoadWords(filePath);
+            _csvLoader = csvLoader;
         }
 
-        private void LoadWords(string filePath)
+
+        public Result<int, string> LoadWords(string filePath)
         {
-            try
+            var result = _csvLoader.Load(filePath);
+
+            if (!result.IsSuccess)
             {
-                if (!File.Exists(filePath))
-                {
-                    LoadErrorMessage = $"Soubor '{filePath}' nebyl nalezen.";
-                    _logger.LogWarning("CSV file '{FilePath}' was not found.", filePath);
-                    return;
-                }
-
-                var lines = File.ReadAllLines(filePath);
-
-                if (lines.Length <= 1)
-                {
-                    LoadErrorMessage = "Soubor neobsahuje žádná data.";
-                    _logger.LogWarning("CSV file '{FilePath}' does not contain any words.", filePath);
-                    return;
-                }
-
-                foreach (var line in lines.Skip(1))
-                {
-                    var parts = line.Split(',');
-
-                    if (parts.Length >= 2 && !string.IsNullOrWhiteSpace(parts[1]))
-                    {
-                        _words.Add(new WordEntry
-                        {
-                            Category = parts[0].Trim(),
-                            Word = parts[1].Trim().ToUpper()
-                        });
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Skipping invalid line format: {Line}", line);
-                    }
-                }
+                return Result<int, string>.Fail(result.Error!);
             }
-            catch (Exception ex)
+
+            lock (_lock)
             {
-                LoadErrorMessage = $"Chyba při načítání souboru: {ex.Message}";
-                _logger.LogError(ex, "Error occurred while loading the CSV file.");
+                _words = result.Value!;
             }
+
+            return Result<int, string>.Ok(_words.Count);
         }
 
         public List<string> GetCategories()
         {
-            return _words.Select(w => w.Category).Distinct().ToList();
+            lock (_lock) 
+            { 
+                return _words.Select(w => w.Category).Distinct().ToList();
+            }
         }
 
         public string? GetRandomWord(string? category = null)
@@ -73,7 +53,6 @@ namespace Hangman.Services
 
             if (!query.Any())
             {
-                LoadErrorMessage = "V kategorii nebylo nalezeno žádné slovo.";
                 _logger.LogWarning("No words were found for category '{Category}'.", category);
                 return null;
             }
