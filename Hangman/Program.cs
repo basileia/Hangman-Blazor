@@ -7,9 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<IGameFactory, GameFactory>();
-builder.Services.AddSingleton<ICsvLoader, CsvLoader>();
-builder.Services.AddSingleton<IWordService, WordService>();
+builder.Services.AddTransient<IGameFactory, GameFactory>();
+builder.Services.AddTransient<ICsvLoader, CsvLoader>();
+builder.Services.AddScoped<IWordService, WordService>();
 
 var app = builder.Build();
 
