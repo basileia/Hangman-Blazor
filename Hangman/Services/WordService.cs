@@ -1,64 +1,46 @@
 ﻿using Hangman.Common;
+using Hangman.Data.Models;
 using Hangman.Interfaces;
-using Hangman.Models;
 
 namespace Hangman.Services
 {
     public class WordService : IWordService
     {
         private readonly ILogger<WordService> _logger;
-        private readonly ICsvLoader _csvLoader;
-        private IReadOnlyList<WordEntry> _words = Array.Empty<WordEntry>();
-        private readonly object _lock = new();
+        private readonly IWordRepository _wordRepository;
 
         public WordService(
             ILogger<WordService> logger,
-            ICsvLoader csvLoader)
+            IWordRepository wordRepository)
         {
             _logger = logger;
-            _csvLoader = csvLoader;
+            _wordRepository = wordRepository;
         }
 
-
-        public Result<int, string> LoadWords(string filePath)
+        public async Task<List<Category>> GetCategoriesAsync()
         {
-            var result = _csvLoader.Load(filePath);
-
-            if (!result.IsSuccess)
-            {
-                return Result<int, string>.Fail(result.Error!);
-            }
-
-            lock (_lock)
-            {
-                _words = result.Value!;
-            }
-
-            return Result<int, string>.Ok(_words.Count);
+            return await _wordRepository.GetCategoriesAsync();
         }
 
-        public List<string> GetCategories()
+        public async Task<Result<string, string>> GetRandomWordAsync(Category category)
         {
-            lock (_lock) 
-            { 
-                return _words.Select(w => w.Category).Distinct().ToList();
-            }
-        }
-
-        public string? GetRandomWord(string? category = null)
-        {
-            var query = string.IsNullOrEmpty(category)
-                ? _words
-                : _words.Where(w => w.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            if (!query.Any())
+            try
             {
-                _logger.LogWarning("No words were found for category '{Category}'.", category);
-                return null;
-            }
+                var randomWord = await _wordRepository.GetRandomWordAsync(category);
 
-            var index = Random.Shared.Next(query.Count);
-            return query[index].Word;
+                if (randomWord == null)
+                {
+                    _logger.LogWarning("No words found for category {Category}", category);
+                    return Result<string, string>.Fail($"Nebylo nalezeno žádné slovo pro kategorii '{category}'");
+                }
+
+                return Result<string, string>.Ok(randomWord);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving random word for category {Category}", category);
+                return Result<string, string>.Fail("Nepodařilo se načíst náhodné slovo.");
+            }
         }
     }
 }

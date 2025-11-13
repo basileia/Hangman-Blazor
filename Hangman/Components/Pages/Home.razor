@@ -1,6 +1,7 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 
+@using Hangman.Data.Models
 @using Hangman.Services
 @using global::Hangman.Interfaces
 
@@ -25,7 +26,7 @@
                     <label class="category-radio">
                         <input type="radio" name="category" value="@category" checked="@(selectedCategory == category)"
                                @onchange="() => selectedCategory = category" />
-                        <span>@category</span>
+                        <span>@category.ToString()</span>
                     </label>
                 }
             </div>
@@ -36,7 +37,7 @@
         }
     </div>
 
-    <button @onclick="StartGame" class="start-btn">Start nové hry</button>
+    <button @onclick="StartGameAsync" class="start-btn">Start nové hry</button>
 </div>
 
 @if (game != null)
@@ -90,38 +91,34 @@
 
 @code {
     private string nickname = "";
-    private List<string>? categories;
-    private string? selectedCategory = null;
+    private List<Category> categories;
+    private Category selectedCategory;
     private IHangmanGameService game;
     private string? maskedWord;
     private string? message;
     private string currentGuess = "";
     private string currentWordGuess = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var filePath = Path.Combine(Env.WebRootPath, "Data", "words.csv");
-        var result = WordService.LoadWords(filePath);
-        if (!result.IsSuccess)
-        {
-            Console.WriteLine($"Nepodařilo se načíst slova: {result.Error}");
-            categories = new List<string>();
-        }
-        else
-        {
-            categories = WordService.GetCategories();
-        }      
+        categories = await WordService.GetCategoriesAsync();   
+        selectedCategory = categories.First();
     }
 
-    private void StartGame()
+    private async Task StartGameAsync()
     {
-        var randomWord = WordService.GetRandomWord(selectedCategory);
-        if (!string.IsNullOrEmpty(randomWord))
+        var result = await WordService.GetRandomWordAsync(selectedCategory);
+
+        if (result.IsSuccess && !string.IsNullOrEmpty(result.Value))
         {
-            game = GameFactory.CreateGame(randomWord);
+            game = GameFactory.CreateGame(result.Value);
             maskedWord = game.GetCurrentProgress();
             message = "";
             currentGuess = "";
+        }
+        else
+        {
+            message = result.Error ?? "Pro zvolenou kategorii nebyla nalezena žádná slova.";
         }
     }
 
@@ -154,7 +151,7 @@
 
     private void ResetGame()
     {
-        selectedCategory = null;
+        selectedCategory = categories.First();
         game = null;
         maskedWord = null;
         message = null;

@@ -1,0 +1,16 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Hangman.Data.Models
+{
+    public class WordEntry
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public Category Category { get; set; }
+
+        [MaxLength(200)]
+        public required string Word { get; set; }
+    }
+}
