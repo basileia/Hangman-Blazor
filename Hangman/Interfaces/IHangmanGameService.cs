@@ -1,4 +1,6 @@
-﻿namespace Hangman.Interfaces
+﻿using Hangman.Common;
+
+namespace Hangman.Interfaces
 {
     public interface IHangmanGameService
     {
@@ -7,7 +9,7 @@
         int NumberOfMistakes { get; }
         int MaxMistakes { get; }
 
-        (bool Success, string Message) Guess(char letter);
+        Result<bool, string> Guess(char letter);
         string GetCurrentProgress();
         bool IsGameOver();
         bool IsWordGuessed();

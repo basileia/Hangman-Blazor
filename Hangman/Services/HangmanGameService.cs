@@ -1,46 +1,42 @@
-﻿using Hangman.Interfaces;
+﻿using Hangman.Common;
+using Hangman.Interfaces;
 
 namespace Hangman.Services
 {
     public class HangmanGameService : IHangmanGameService
 
     {
-        public string SecretWord { get; private set; }
-        public HashSet<char> GuessedLetters { get; private set; } = new();
+        public string SecretWord { get; }
+        public HashSet<char> GuessedLetters { get; } = new();
         public int NumberOfMistakes { get; private set; } = 0;
-        public int MaxMistakes { get; private set; }
+        public int MaxMistakes { get; }
 
         public HangmanGameService(string secretWord, int maxMistakes = 6)
         {
-            if (string.IsNullOrWhiteSpace(secretWord))
-                throw new ArgumentException("Secret word cannot be null or empty.", nameof(secretWord));
-
             SecretWord = secretWord.ToUpper();
             MaxMistakes = maxMistakes;
         }
 
-        public (bool Success, string Message) Guess(char letter)
+        public Result<bool, string> Guess(char letter)
         {
             letter = char.ToUpper(letter);
 
             if (!char.IsLetter(letter))
-                return (false, "Zadejte platné písmeno.");
+                return Result<bool, string>.Fail("Zadejte platné písmeno.");
 
             if (GuessedLetters.Contains(letter))
-                return (false, "Toto písmeno už jsi zkoušel.");
+                return Result<bool, string>.Fail("Toto písmeno jsi už zkoušel.");
 
             GuessedLetters.Add(letter);
 
-            if (SecretWord.Contains(letter))
-            {
-                return (true, $"Písmeno '{letter}' je ve slově.");
-            }
-            else
+            bool isCorrect = SecretWord.Contains(letter);
+            if (!isCorrect)
             {
                 NumberOfMistakes++;
-                return (false, $"Písmeno '{letter}' ve slově není.");
+                return Result<bool, string>.Fail($"Písmeno '{letter}' ve slově není.");
             }
-        }
+            return Result<bool, string>.Ok(isCorrect);
+        }        
 
         public string GetCurrentProgress()
         {
