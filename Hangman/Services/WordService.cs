@@ -1,79 +1,46 @@
-﻿using Hangman.Interfaces;
-using Hangman.Models;
+﻿using Hangman.Common;
+using Hangman.Data.Models;
+using Hangman.Interfaces;
 
 namespace Hangman.Services
 {
     public class WordService : IWordService
     {
-        private readonly List<WordEntry> _words = new();
-        private readonly Random _random = new();
+        private readonly ILogger<WordService> _logger;
+        private readonly IWordRepository _wordRepository;
 
-        public WordService(string filePath)
+        public WordService(
+            ILogger<WordService> logger,
+            IWordRepository wordRepository)
         {
-            LoadWords(filePath);
+            _logger = logger;
+            _wordRepository = wordRepository;
         }
 
-        private void LoadWords(string filePath)
+        public async Task<List<Category>> GetCategoriesAsync()
+        {
+            return await _wordRepository.GetCategoriesAsync();
+        }
+
+        public async Task<Result<string, string>> GetRandomWordAsync(Category category)
         {
             try
             {
-                if (!File.Exists(filePath))
+                var randomWord = await _wordRepository.GetRandomWordAsync(category);
+
+                if (randomWord == null)
                 {
-                    Console.WriteLine($"[Warning] CSV soubor '{filePath}' nebyl nalezen.");
-                    return;
+                    _logger.LogWarning("No words found for category {Category}", category);
+                    return Result<string, string>.Fail($"Nebylo nalezeno žádné slovo pro kategorii '{category}'");
                 }
 
-                var lines = File.ReadAllLines(filePath);
-
-                if (lines.Length <= 1)
-                {
-                    Console.WriteLine($"[Warning] CSV soubor '{filePath}' neobsahuje žádná slova.");
-                    return;
-                }
-
-                foreach (var line in lines.Skip(1))
-                {
-                    var parts = line.Split(',');
-
-                    if (parts.Length >= 2 && !string.IsNullOrWhiteSpace(parts[1]))
-                    {
-                        _words.Add(new WordEntry
-                        {
-                            Category = parts[0].Trim(),
-                            Word = parts[1].Trim().ToUpper()
-                        });
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[Warning] Ignoruji řádek se špatným formátem: {line}");
-                    }
-                }
+                return Result<string, string>.Ok(randomWord);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Error] Chyba při načítání CSV: {ex.Message}");
+                _logger.LogError(ex, "Error retrieving random word for category {Category}", category);
+                return Result<string, string>.Fail("Nepodařilo se načíst náhodné slovo.");
             }
-        }
-
-        public List<string> GetCategories()
-        {
-            return _words.Select(w => w.Category).Distinct().ToList();
-        }
-
-        public string? GetRandomWord(string? category = null)
-        {
-            var query = string.IsNullOrEmpty(category)
-                ? _words
-                : _words.Where(w => w.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            if (!query.Any())
-            {
-                Console.WriteLine("[Warning] Nebyla nalezena žádná slova pro danou kategorii.");
-                return null;
-            }
-
-            var index = _random.Next(query.Count);
-            return query[index].Word;
         }
     }
 }

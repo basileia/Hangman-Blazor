@@ -1,10 +1,13 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 
+@using Hangman.Data.Models
 @using Hangman.Services
 @using global::Hangman.Interfaces
 
 @inject IWordService WordService
+@inject IGameFactory GameFactory
+@inject IWebHostEnvironment Env
 
 <PageTitle>Hangman</PageTitle>
 
@@ -12,12 +15,7 @@
     <h1>HANGMAN</h1>
 </div>
 
-<div class="setup-section">
-    <label>
-        Přezdívka:
-        <input class="nickname-input" type="text" @bind="nickname" />
-    </label>
-
+<div class="setup-section">   
     <div class="category-section">
         <p>Vyber kategorii:</p>
         @if (categories != null)
@@ -28,7 +26,7 @@
                     <label class="category-radio">
                         <input type="radio" name="category" value="@category" checked="@(selectedCategory == category)"
                                @onchange="() => selectedCategory = category" />
-                        <span>@category</span>
+                        <span>@category.ToString()</span>
                     </label>
                 }
             </div>
@@ -39,7 +37,7 @@
         }
     </div>
 
-    <button @onclick="StartGame" class="start-btn">Start nové hry</button>
+    <button @onclick="StartGameAsync" class="start-btn">Start nové hry</button>
 </div>
 
 @if (game != null)
@@ -93,28 +91,34 @@
 
 @code {
     private string nickname = "";
-    private List<string>? categories;
-    private string? selectedCategory = null;
-    private HangmanGameService? game;
+    private List<Category> categories;
+    private Category selectedCategory;
+    private IHangmanGameService game;
     private string? maskedWord;
     private string? message;
     private string currentGuess = "";
     private string currentWordGuess = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        categories = WordService.GetCategories();
+        categories = await WordService.GetCategoriesAsync();   
+        selectedCategory = categories.First();
     }
 
-    private void StartGame()
+    private async Task StartGameAsync()
     {
-        var randomWord = WordService.GetRandomWord(selectedCategory);
-        if (!string.IsNullOrEmpty(randomWord))
+        var result = await WordService.GetRandomWordAsync(selectedCategory);
+
+        if (result.IsSuccess && !string.IsNullOrEmpty(result.Value))
         {
-            game = new HangmanGameService(randomWord);
+            game = GameFactory.CreateGame(result.Value);
             maskedWord = game.GetCurrentProgress();
             message = "";
             currentGuess = "";
+        }
+        else
+        {
+            message = result.Error ?? "Pro zvolenou kategorii nebyla nalezena žádná slova.";
         }
     }
 
@@ -123,8 +127,8 @@
         if (string.IsNullOrWhiteSpace(currentGuess) || game == null) return;
 
         char letter = currentGuess[0];
-        var (success, msg) = game.Guess(letter);
-        message = msg;
+        var resultGues = game.Guess(letter);
+        message = resultGues.IsSuccess ? $"Správně! Písmeno '{char.ToUpper(letter)}' je ve slově." : resultGues.Error;
         maskedWord = game.GetCurrentProgress();
         currentGuess = "";
     }
@@ -147,8 +151,7 @@
 
     private void ResetGame()
     {
-        nickname = "";
-        selectedCategory = null;
+        selectedCategory = categories.First();
         game = null;
         maskedWord = null;
         message = null;
