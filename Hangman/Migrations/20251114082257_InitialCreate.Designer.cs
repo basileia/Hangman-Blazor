@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hangman.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251113212203_InitialCreate")]
+    [Migration("20251114082257_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

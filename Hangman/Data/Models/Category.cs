@@ -4,15 +4,11 @@ namespace Hangman.Data.Models
 {
     public enum Category
     {
-        [Description("Programování")]
-        Programovani,
-        [Description("Učitelství")]
-        Ucitelstvi,
-        [Description("Zvířata")]
-        Zvirata,
+        Programování,
+        Učitelství,
+        Zvířata,
         Farmacie,
         Montessori,
-        [Description("Povolání")]
-        Povolani
+        Povolání
     }
 }
