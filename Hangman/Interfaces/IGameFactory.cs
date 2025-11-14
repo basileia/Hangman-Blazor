@@ -1,6 +1,4 @@
-﻿using Hangman.Services;
-
-namespace Hangman.Interfaces
+﻿namespace Hangman.Interfaces
 {
     public interface IGameFactory
     {

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace Hangman.Data.Models
+﻿namespace Hangman.Data.Models
 {
     public enum Category
     {

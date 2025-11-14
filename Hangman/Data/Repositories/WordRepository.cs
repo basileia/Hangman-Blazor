@@ -13,21 +13,6 @@ namespace Hangman.Data.Repositories
             _context = context;
         }
 
-        public async Task<List<WordEntry>> GetAllWordsAsync()
-        {
-            return await _context.WordEntries
-                                 .AsNoTracking()
-                                 .ToListAsync();
-        }
-
-        public async Task<List<WordEntry>> GetWordsByCategoryAsync(Category category)
-        {
-            return await _context.WordEntries
-                                 .AsNoTracking()
-                                 .Where(w => w.Category == category)
-                                 .ToListAsync();
-        }
-
         public async Task<List<Category>> GetCategoriesAsync()
         {
             return await _context.WordEntries
