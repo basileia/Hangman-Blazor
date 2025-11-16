@@ -2,12 +2,10 @@
 @rendermode InteractiveServer
 
 @using Hangman.Data.Models
-@using Hangman.Services
 @using global::Hangman.Interfaces
 
 @inject IWordService WordService
 @inject IGameFactory GameFactory
-@inject IWebHostEnvironment Env
 
 <PageTitle>Hangman</PageTitle>
 
@@ -171,7 +169,7 @@
         }
         else
         {
-            message = $"❌ Slovo '{currentWordGuess}' není správně! Prohráváš.";
+            message = $"❌ Slovo '{currentWordGuess.ToUpper()}' není správně! Prohráváš.";
             game.ForceLose();
         }
 
